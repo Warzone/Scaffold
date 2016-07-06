@@ -136,7 +136,6 @@ public class ScaffoldCommands {
             Player player = (Player) sender;
             player.teleport(wrapper.getWorld().get().getSpawnLocation());
             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 0));
             player.setGameMode(GameMode.CREATIVE);
             player.setAllowFlight(true);
             player.setFlying(true);
