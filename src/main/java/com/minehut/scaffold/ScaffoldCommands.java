@@ -176,7 +176,7 @@ public class ScaffoldCommands {
             sender.sendMessage(ChatColor.GOLD + "Failed to unload world \"" + wrapper.getName() + "\".");
     }
 
-    @Command(aliases = "upload", desc = "Upload a world.", min = 0, max = 1, usage = "<world>")
+    @Command(aliases = "export", desc = "Export a world.", min = 0, max = 1, usage = "<world>")
     public static void upload(CommandContext cmd, CommandSender sender) {
         String current = "---";
         if (sender instanceof Player)
@@ -221,7 +221,7 @@ public class ScaffoldCommands {
         });
     }
 
-    @Command(aliases = "download", desc = "Download a world.", min = 2, max = 2, usage = "<.zip file link> <world name>")
+    @Command(aliases = "import", desc = "Import a world.", min = 2, max = 2, usage = "<.zip file link> <world name>")
     public static void download(CommandContext cmd, CommandSender sender) {
         String link = cmd.getString(0);
         ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(cmd.getString(1));
@@ -231,7 +231,7 @@ public class ScaffoldCommands {
             return;
         }
 
-        Bukkit.broadcastMessage(ChatColor.YELLOW + "World download by " + sender.getName() + " beginning...");
+        Bukkit.broadcastMessage(ChatColor.YELLOW + "World import by " + sender.getName() + " beginning...");
 
         Scaffold.instance().async(new Runnable() {
             @Override
@@ -251,13 +251,13 @@ public class ScaffoldCommands {
                         @Override
                         public void run() {
                             wrapper.load();
-                            sender.sendMessage(ChatColor.GOLD + "World downloaded and opened!");
+                            sender.sendMessage(ChatColor.GOLD + "World imported and opened!");
                         }
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
                     sender.sendMessage(ChatColor.RED + e.getMessage());
-                    sender.sendMessage(ChatColor.RED + "Failed to download, see server logs.");
+                    sender.sendMessage(ChatColor.RED + "Failed to import, see server logs.");
                 }
             }
         });
