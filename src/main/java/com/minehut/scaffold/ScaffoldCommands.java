@@ -240,10 +240,10 @@ public class ScaffoldCommands {
 
                 sender.sendMessage(ChatColor.YELLOW + "Uploading world...");
                 try {
-                    HttpResponse<JsonNode> json = Unirest.post("https://file.io").field("file", zip).asJson();
-                    JSONObject object = json.getBody().getObject();
+                    HttpResponse<String> response = Unirest.post("https://transfer.sh/").header("Max-Downloads", "1").header("Max-Days", "3").field("upload-file", zip).asString();
+                    String link = response.getBody();
                     zip.delete();
-                    sender.sendMessage(ChatColor.GOLD + "Upload complete: " + object.getString("link"));
+                    sender.sendMessage(ChatColor.GOLD + "Upload complete: " + link);
                 } catch (Exception e) {
                     e.printStackTrace();
                     sender.sendMessage(ChatColor.RED + "Failed to upload, see the server logs.");
