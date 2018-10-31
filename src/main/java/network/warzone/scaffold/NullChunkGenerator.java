@@ -1,4 +1,4 @@
-package com.minehut.scaffold;
+package network.warzone.scaffold;
 
 import org.bukkit.Location;
 import org.bukkit.World;

@@ -1,4 +1,4 @@
-package com.minehut.scaffold.config;
+package network.warzone.scaffold.utils.config;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -1,4 +1,4 @@
-package com.minehut.scaffold;
+package network.warzone.scaffold;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;

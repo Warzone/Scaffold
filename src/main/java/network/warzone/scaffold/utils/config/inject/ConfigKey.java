@@ -1,4 +1,4 @@
-package com.minehut.scaffold.config.inject;
+package network.warzone.scaffold.utils.config.inject;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

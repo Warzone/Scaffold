@@ -1,6 +1,6 @@
-package com.minehut.scaffold.config.inject;
+package network.warzone.scaffold.utils.config.inject;
 
-import com.minehut.scaffold.config.ConfigException;
+import network.warzone.scaffold.utils.config.ConfigException;
 
 public class ConfigInjectionException extends ConfigException {
     public ConfigInjectionException(String msg, Throwable cause) {

@@ -1,10 +1,10 @@
-package com.minehut.scaffold;
+package network.warzone.scaffold;
 
 import com.google.common.base.Preconditions;
-import lombok.Getter;
+import lombok.Data;
 import lombok.ToString;
-import com.minehut.scaffold.config.Config;
-import com.minehut.scaffold.config.ConfigFile;
+import network.warzone.scaffold.utils.config.Config;
+import network.warzone.scaffold.utils.config.ConfigFile;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
@@ -13,11 +13,12 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.util.Optional;
 
-@ToString(exclude = {"folder", "configFile"})
+@ToString(exclude = {"folder", "configFile"}) @Data
 public class ScaffoldWorld {
-    @Getter private final String name;
-    @Getter private final String worldName;
-    @Getter private final File folder;
+
+    private final String name;
+    private final String worldName;
+    private final File folder;
     private final File configFile;
 
     public ScaffoldWorld(String name) {
@@ -148,19 +149,4 @@ public class ScaffoldWorld {
         return new ScaffoldWorld(query);
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getWorldName() {
-        return worldName;
-    }
-
-    public File getFolder() {
-        return folder;
-    }
-
-    public File getConfigFile() {
-        return configFile;
-    }
 }
