@@ -1,8 +1,6 @@
 package com.minehut.scaffold;
 
 import com.google.common.base.Preconditions;
-import com.minehut.scaffold.ScaffoldListener;
-import com.minehut.scaffold.ScaffoldWorld;
 import com.sk89q.bukkit.util.CommandsManagerRegistration;
 import com.sk89q.minecraft.util.commands.*;
 import org.bukkit.ChatColor;
@@ -12,9 +10,11 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-public class Scaffold extends JavaPlugin implements TabCompleter {
+public final class Scaffold extends JavaPlugin implements TabCompleter {
     private static Scaffold instance;
     private CommandsManager<CommandSender> commands;
     private Map<ScaffoldWorld, Long> locked = new HashMap<>();
@@ -27,7 +27,8 @@ public class Scaffold extends JavaPlugin implements TabCompleter {
     public void onEnable() {
         instance = this;
 
-        getServer().getPluginManager().registerEvents(new ScaffoldListener(), this);
+        //TODO Disabled large number warning for now but add back later with some changes
+        //getServer().getPluginManager().registerEvents(new ScaffoldListener(), this);
 
         this.commands = new CommandsManager<CommandSender>() {
             @Override
@@ -39,15 +40,12 @@ public class Scaffold extends JavaPlugin implements TabCompleter {
         CommandsManagerRegistration cmds = new CommandsManagerRegistration(this, this.commands);
         cmds.register(ScaffoldCommands.class);
 
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-            @Override
-            public void run() {
-                for (ScaffoldWorld wrapper : locked.keySet()) {
-                    if (wrapper.isOpen())
-                        wrapper.getWorld().get().setFullTime(locked.get(wrapper));
-                }
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
+            for (ScaffoldWorld wrapper : locked.keySet()) {
+                if (wrapper.isOpen())
+                    wrapper.getWorld().get().setFullTime(locked.get(wrapper));
             }
-        }, 0, 20);
+        }, 1, 20);
     }
 
     @Override

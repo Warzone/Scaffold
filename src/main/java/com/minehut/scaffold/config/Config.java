@@ -1,19 +1,21 @@
 package com.minehut.scaffold.config;
 
-import lombok.Getter;
 import com.minehut.scaffold.config.inject.ConfigInjector;
+import lombok.Getter;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Config {
-    protected static final Yaml yaml = new Yaml();
 
-    @Getter private final Map<String, Object> data;
+    static final Yaml yaml = new Yaml();
+    @Getter private Map<String, Object> data;
 
     public Config(Map<String, Object> data) {
         this.data = data;
@@ -26,18 +28,6 @@ public class Config {
     @SuppressWarnings("unchecked")
     private Config(Object object) {
         this((Map<String, Object>) object);
-    }
-
-    public Config(String raw) {
-        this(yaml.load(raw));
-    }
-
-    public Config(InputStream stream) {
-        this(yaml.load(stream));
-    }
-
-    public Config(Reader reader) {
-        this(yaml.load(reader));
     }
 
     @Override
