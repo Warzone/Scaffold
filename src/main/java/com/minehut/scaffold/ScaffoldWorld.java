@@ -65,6 +65,14 @@ public class ScaffoldWorld {
         world.setAutoSave(true);
         world.save();
 
+        world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+        world.setGameRule(GameRule.COMMAND_BLOCK_OUTPUT, false);
+        world.setGameRule(GameRule.DISABLE_ELYTRA_MOVEMENT_CHECK, true);
+        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+        world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+        world.setGameRule(GameRule.LOG_ADMIN_COMMANDS, false);
+        world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0);
+
         Vector min = new Vector(-1, 0, -1);
         Vector max = new Vector(1, 0, 1);
 

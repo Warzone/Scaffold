@@ -2,4 +2,5 @@ name: Scaffold
 description: Manage a build server.
 main: com.minehut.scaffold.Scaffold
 version: ${project.version}
-authors: [Avicus, Minehut]
+authors: [Avicus, Minehut, Warzone]
+api-version: 1.13
