@@ -1,10 +1,10 @@
-package com.minehut.scaffold.config.inject;
+package network.warzone.scaffold.utils.config.inject;
 
-import com.minehut.scaffold.config.Config;
-import com.minehut.scaffold.snap.Annotationable;
-import com.minehut.scaffold.snap.SnapClass;
-import com.minehut.scaffold.snap.SnapException;
-import com.minehut.scaffold.snap.SnapField;
+import network.warzone.scaffold.utils.config.Config;
+import network.warzone.scaffold.utils.snap.Annotationable;
+import network.warzone.scaffold.utils.snap.SnapClass;
+import network.warzone.scaffold.utils.snap.SnapException;
+import network.warzone.scaffold.utils.snap.SnapField;
 
 import java.util.Optional;
 

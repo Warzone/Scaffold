@@ -1,4 +1,4 @@
-package com.minehut.scaffold.snap;
+package network.warzone.scaffold.utils.snap;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;

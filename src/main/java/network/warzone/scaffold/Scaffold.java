@@ -1,8 +1,9 @@
-package com.minehut.scaffold;
+package network.warzone.scaffold;
 
 import com.google.common.base.Preconditions;
 import com.sk89q.bukkit.util.CommandsManagerRegistration;
 import com.sk89q.minecraft.util.commands.*;
+import network.warzone.scaffold.commands.ScaffoldCommands;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -15,13 +16,14 @@ import java.util.Iterator;
 import java.util.Map;
 
 public final class Scaffold extends JavaPlugin implements TabCompleter {
-    private static Scaffold instance;
-    private CommandsManager<CommandSender> commands;
-    private Map<ScaffoldWorld, Long> locked = new HashMap<>();
 
-    public static Scaffold instance() {
+    private static Scaffold instance;
+    public static Scaffold get() {
         return instance;
     }
+
+    private CommandsManager<CommandSender> commands;
+    private Map<ScaffoldWorld, Long> locked = new HashMap<>();
 
     @Override
     public void onEnable() {

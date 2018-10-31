@@ -1,4 +1,4 @@
-package com.minehut.scaffold.config;
+package network.warzone.scaffold.utils.config;
 
 public class ConfigException extends RuntimeException {
     public ConfigException(String msg, Throwable cause) {

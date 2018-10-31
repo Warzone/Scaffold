@@ -1,6 +1,6 @@
-package com.minehut.scaffold.config;
+package network.warzone.scaffold.utils.config;
 
-import com.minehut.scaffold.config.inject.ConfigInjector;
+import network.warzone.scaffold.utils.config.inject.ConfigInjector;
 import lombok.Getter;
 import org.yaml.snakeyaml.Yaml;
 

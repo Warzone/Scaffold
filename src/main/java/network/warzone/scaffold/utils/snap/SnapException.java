@@ -1,4 +1,4 @@
-package com.minehut.scaffold.snap;
+package network.warzone.scaffold.utils.snap;
 
 public class SnapException extends RuntimeException {
     public SnapException(String msg) {

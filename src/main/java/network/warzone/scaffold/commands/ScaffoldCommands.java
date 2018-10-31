@@ -1,4 +1,4 @@
-package com.minehut.scaffold;
+package network.warzone.scaffold.commands;
 
 import com.google.common.base.Joiner;
 import com.mashape.unirest.http.HttpResponse;
@@ -7,6 +7,9 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandNumberFormatException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
+import network.warzone.scaffold.Scaffold;
+import network.warzone.scaffold.ScaffoldWorld;
+import network.warzone.scaffold.Zip;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
@@ -50,7 +53,7 @@ public class ScaffoldCommands {
             return;
         }
 
-        boolean locked = Scaffold.instance().toggleLock(wrapper);
+        boolean locked = Scaffold.get().toggleLock(wrapper);
         if (locked)
             sender.sendMessage(ChatColor.GOLD + "Locked " + wrapper.getName() + " to current time.");
         else
@@ -220,7 +223,7 @@ public class ScaffoldCommands {
             return;
         }
 
-        Scaffold.instance().async(() -> {
+        Scaffold.get().async(() -> {
             sender.sendMessage(ChatColor.YELLOW + "Compressing world...");
             String randy = UUID.randomUUID().toString().substring(0, 3);
             File zip = new File(wrapper.getName()  + "-" + randy + ".zip");
@@ -265,7 +268,7 @@ public class ScaffoldCommands {
 
         Bukkit.broadcastMessage(ChatColor.YELLOW + "World import by " + sender.getName() + " beginning...");
 
-        Scaffold.instance().async(() -> {
+        Scaffold.get().async(() -> {
             try {
                 HttpResponse<InputStream> response = Unirest.get(link).header("content-type", "*/*").asBinary();
                 File temp = new File(UUID.randomUUID().toString() + ".zip");
@@ -277,7 +280,7 @@ public class ScaffoldCommands {
                     FileUtils.deleteDirectory(wrapper.getFolder());
                     return;
                 }
-                Scaffold.instance().sync(() -> {
+                Scaffold.get().sync(() -> {
                     wrapper.load();
                     sender.sendMessage(ChatColor.GOLD + "World imported and opened!");
                 });

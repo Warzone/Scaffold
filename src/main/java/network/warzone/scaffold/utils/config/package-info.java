@@ -1,4 +1,4 @@
 /**
  * An abstraction of snakeyaml: Parses and saves YAML files.
  */
-package com.minehut.scaffold.config;
+package network.warzone.scaffold.utils.config;
