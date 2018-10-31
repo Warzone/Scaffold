@@ -72,6 +72,11 @@
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
         </repository>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -121,14 +126,20 @@
         </dependency>
 
         <dependency>
-            <groupId>com.sk89q</groupId>
+            <groupId>com.github.OvercastNetwork.sk89q-command-framework</groupId>
             <artifactId>command-framework-bukkit</artifactId>
-            <version>0.6-SNAPSHOT</version>
+            <version>d1e29bedbe</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bukkit</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.sk89q</groupId>
-            <artifactId>command-framework-core</artifactId>
-            <version>0.6-SNAPSHOT</version>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
         </dependency>
 
         <dependency>
