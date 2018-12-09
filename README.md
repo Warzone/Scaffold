@@ -18,5 +18,5 @@ This project is a fork of Avicus Network's [Build Plugin](https://github.com/Avi
 
 ``/open``
 ``/create``
-``/export`` [Broken]
-``/import`` [Broken]
+``/export``
+``/import``
