@@ -11,4 +11,12 @@ This project is a fork of Avicus Network's [Build Plugin](https://github.com/Avi
 
 2. Compile the latest version of Scaffold or download it from our [Jenkins](https://jenkins.bennydoesstuff.me/job/Scaffold/).
 
-3. Start the server. The 3 most basic commands in the plugin are ``/create``, ``/worlds``, and ``/open``.
+3. Start the server.
+
+
+## Scaffold Commands
+
+``/open``
+``/create``
+``/export`` [Broken]
+``/import`` [Broken]
