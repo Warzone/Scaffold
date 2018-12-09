@@ -23,9 +23,9 @@ public class ScaffoldWorld {
 
     public ScaffoldWorld(String name) {
         this.name = name;
-        this.worldName = "scaffold/" + this.name;
+        this.worldName = "worlds/" + this.name;
         this.folder = new File(this.worldName);
-        this.configFile = new File(this.folder, "scaffold.yml");
+        this.configFile = new File(this.folder, "world.yml");
     }
 
     public Optional<World> getWorld() {
@@ -131,14 +131,14 @@ public class ScaffoldWorld {
     }
 
     public static Optional<ScaffoldWorld> ofWorld(World world) {
-        if (!world.getName().startsWith("scaffold/"))
+        if (!world.getName().startsWith("worlds/"))
             return Optional.empty();
 
-        return Optional.of(new ScaffoldWorld(world.getName().replace("scaffold/", "")));
+        return Optional.of(new ScaffoldWorld(world.getName().replace("worlds/", "")));
     }
 
     public static ScaffoldWorld ofSearch(String query) {
-        File[] files = new File("scaffold").listFiles();
+        File[] files = new File("worlds").listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.getName().equalsIgnoreCase(query)) {
