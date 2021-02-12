@@ -1,5 +1,5 @@
 export:
   # Maximum amount of downloads before link is dead.
   maxdownloads: 1
-  # Maxomum amount of days before link is dead.
+  # Maximum amount of days before link is dead.
   maxdays: 3
