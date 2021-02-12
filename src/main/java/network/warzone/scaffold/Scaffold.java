@@ -30,7 +30,7 @@ public final class Scaffold extends JavaPlugin implements TabCompleter {
         instance = this;
 
         //TODO Disabled large number warning for now but add back later with some changes
-        //getServer().getPluginManager().registerEvents(new ScaffoldListener(), this);
+        getServer().getPluginManager().registerEvents(new ScaffoldListener(), this);
 
         this.commands = new CommandsManager<CommandSender>() {
             @Override
