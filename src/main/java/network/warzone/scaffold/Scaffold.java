@@ -17,7 +17,7 @@ import java.util.Map;
 
 public final class Scaffold extends JavaPlugin implements TabCompleter {
 
-    private static Scaffold instance;
+    public static Scaffold instance;
     public static Scaffold get() {
         return instance;
     }
@@ -31,6 +31,8 @@ public final class Scaffold extends JavaPlugin implements TabCompleter {
 
         //TODO Disabled large number warning for now but add back later with some changes
         //getServer().getPluginManager().registerEvents(new ScaffoldListener(), this);
+
+        this.saveDefaultConfig();
 
         this.commands = new CommandsManager<CommandSender>() {
             @Override

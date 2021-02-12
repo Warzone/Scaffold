@@ -205,8 +205,8 @@ public class ScaffoldCommands {
 
     @CommandPermissions("scaffold.command.export")
     @Command(aliases = "export", desc = "Export a world.", min = 0, max = 1, usage = "<world>")
-    public static void upload(CommandContext cmd, CommandSender sender) {
-        if (!sender.hasPermission("scaffold.command.upload")) {
+    public static void export(CommandContext cmd, CommandSender sender) {
+        if (!sender.hasPermission("scaffold.command.export")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
             return;
         }
@@ -238,7 +238,7 @@ public class ScaffoldCommands {
 
             sender.sendMessage(ChatColor.YELLOW + "Uploading world...");
             try {
-                HttpResponse<String> response = Unirest.post("https://transfer.sh/").header("Max-Downloads", "1").header("Max-Days", "3").field("upload-file", zip).asString();
+                HttpResponse<String> response = Unirest.post("https://transfer.sh/").header("Max-Downloads", Scaffold.get().getConfig().getString("export.maxdownloads")).header("Max-Days", Scaffold.get().getConfig().getString("export.maxdays")).field("upload-file", zip).asString();
                 String link = response.getBody();
                 zip.delete();
                 sender.sendMessage(ChatColor.GOLD + "Upload complete: " + link);
