@@ -39,6 +39,8 @@ public final class Scaffold extends JavaPlugin implements TabCompleter {
             }
         };
 
+        this.saveDefaultConfig(); // Generate configuration file.
+
         CommandsManagerRegistration cmds = new CommandsManagerRegistration(this, this.commands);
         cmds.register(ScaffoldCommands.class);
 
