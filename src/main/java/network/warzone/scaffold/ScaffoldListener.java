@@ -67,7 +67,7 @@ public class ScaffoldListener implements Listener {
         Player player = event.getPlayer();
         Location playerlocation = player.getLocation();
 
-        if (Scaffold.get().getConfig().getBoolean("voidbounce") == true && playerlocation.getY() < 1) {
+        if (Scaffold.get().getConfig().getBoolean("voidbounce") == true && playerlocation.getY() < -64) {
             player.setVelocity(new Vector(0,2,0));
         }
     }
