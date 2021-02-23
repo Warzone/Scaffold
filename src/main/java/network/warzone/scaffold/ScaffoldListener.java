@@ -3,6 +3,7 @@ package network.warzone.scaffold;
 import com.google.common.base.Splitter;
 import com.sk89q.minecraft.util.commands.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,8 +19,8 @@ import java.util.*;
  */
 public class ScaffoldListener implements Listener {
 
+    FileConfiguration config = Scaffold.get().getConfig();
     private static final int NUMBER_WARNING = 950;
-
     private final Map<Date, String> todo = new HashMap<>();
 
 //    @EventHandler
@@ -67,7 +68,7 @@ public class ScaffoldListener implements Listener {
         Player player = event.getPlayer();
         Location playerlocation = player.getLocation();
 
-        if (Scaffold.get().getConfig().getBoolean("voidbounce") == true && playerlocation.getY() < -64) {
+        if (config.getBoolean("voidbounce") == true && playerlocation.getY() < -64) {
             player.setVelocity(new Vector(0,2,0));
         }
     }
