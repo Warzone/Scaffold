@@ -14,6 +14,8 @@ import org.apache.commons.io.FileUtils;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -28,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ScaffoldCommands {
+    static FileConfiguration config = Scaffold.get().getConfig();
 
     @CommandPermissions("scaffold.command.lock")
     @Command(aliases = "lock", desc = "Lock a world at this time.", min = 1, max = 1, usage = "<world>")
@@ -238,7 +241,7 @@ public class ScaffoldCommands {
 
             sender.sendMessage(ChatColor.YELLOW + "Uploading world...");
             try {
-                HttpResponse<String> response = Unirest.post("https://transfer.sh/").header("Max-Downloads", Scaffold.get().getConfig().getString("export.maxdownloads")).header("Max-Days", Scaffold.get().getConfig().getString("export.maxdays")).field("upload-file", zip).asString();
+                HttpResponse<String> response = Unirest.post("https://transfer.sh/").header("Max-Downloads", config.getString("export.maxdownloads")).header("Max-Days", config.getString("export.maxdays")).field("upload-file", zip).asString();
                 String link = response.getBody();
                 zip.delete();
                 sender.sendMessage(ChatColor.GOLD + "Upload complete: " + link);
