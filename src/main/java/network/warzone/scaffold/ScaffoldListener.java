@@ -65,7 +65,7 @@ public class ScaffoldListener implements Listener {
     @EventHandler
     public void onVoidDepth(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        Location playerlocation = event.getPlayer().getLocation();
+        Location playerlocation = player.getLocation();
 
         if (Scaffold.get().getConfig().getBoolean("voidbounce") == true && playerlocation.getY() < 1) {
             player.setVelocity(new Vector(0,2,0));
