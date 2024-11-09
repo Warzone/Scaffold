@@ -1,6 +1,5 @@
 package network.warzone.scaffold.utils.config;
 
-import network.warzone.scaffold.utils.config.inject.ConfigInjector;
 import lombok.Getter;
 import org.yaml.snakeyaml.Yaml;
 
@@ -154,9 +153,5 @@ public class Config {
             return (T) list;
         }
         return (T) this.data.get(key);
-    }
-
-    public ConfigInjector injector(Class<?> clazz) {
-        return new ConfigInjector(clazz, this);
     }
 }
