@@ -1,6 +1,5 @@
 package network.warzone.scaffold.utils.config;
 
-import lombok.Getter;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -14,7 +13,11 @@ import java.util.Map;
 public class Config {
 
     static final Yaml yaml = new Yaml();
-    @Getter private Map<String, Object> data;
+    private Map<String, Object> data;
+
+    public Map<String, Object> getData() {
+        return data;
+    }
 
     public Config(Map<String, Object> data) {
         this.data = data;
@@ -35,8 +38,8 @@ public class Config {
     }
 
     public void save(File file) {
-        try {
-            yaml.dump(this.data, new FileWriter(file));
+        try (FileWriter writer = new FileWriter(file)) {
+            yaml.dump(this.data, writer);
         } catch (IOException e) {
             throw new ConfigException("unable to write to file", e);
         }
@@ -72,7 +75,7 @@ public class Config {
 
     @SuppressWarnings("unchecked")
     public <T> List<T> getList(String key, Class<T> cast) {
-        List list = get(key, List.class);
+        List<?> list = get(key, List.class);
         for (Object object : list) {
             if (!cast.isAssignableFrom(object.getClass()))
                 throw new ClassCastException("List element '" + object + "' of type " + object.getClass() + " cannot be casted to " + cast);
@@ -143,8 +146,8 @@ public class Config {
         if (value instanceof Map)
             return (T) new Config(value);
         if (value instanceof List) {
-            List list = new ArrayList<>();
-            for (Object item : (List) value) {
+            List<Object> list = new ArrayList<>();
+            for (Object item : (List<?>) value) {
                 if (item instanceof Map)
                     list.add(new Config(item));
                 else

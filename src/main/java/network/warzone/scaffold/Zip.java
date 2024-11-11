@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class Zip {
-    public static void create(File folder, final File zipFile) throws IOException, ZipException {
+    public static void create(File folder, final File zipFile, boolean prune) throws IOException {
         ZipFile zip = new ZipFile(zipFile);
         ZipParameters params = new ZipParameters();
         File[] contents = folder.listFiles();

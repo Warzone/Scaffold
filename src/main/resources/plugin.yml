@@ -4,3 +4,30 @@ main: network.warzone.scaffold.Scaffold
 version: ${project.version}
 authors: [Avicus, Minehut, Warzone]
 api-version: 1.13
+
+commands:
+  lock:
+    description: Lock a world at this time.
+    permission: scaffold.command.lock
+  archive:
+    description: Archive and delete a world.
+    permission: scaffold.command.archive
+  create:
+    description: Create a new world.
+    permission: scaffold.command.create
+  open:
+    description: Open a world.
+    permission: scaffold.command.open
+    aliases: [world]
+  close:
+    description: Close a world.
+    permission: scaffold.command.close
+  export:
+    description: Export a world.
+    permission: scaffold.command.export
+  import:
+    description: Import a world from a zip file.
+    permission: scaffold.command.import
+  worlds:
+    description: Show all worlds.
+    permission: scaffold.command.worlds
