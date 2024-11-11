@@ -3,149 +3,167 @@ package network.warzone.scaffold.commands;
 import com.google.common.base.Joiner;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandNumberFormatException;
-import com.sk89q.minecraft.util.commands.CommandPermissions;
 import network.warzone.scaffold.Scaffold;
 import network.warzone.scaffold.ScaffoldWorld;
 import network.warzone.scaffold.Zip;
+import network.warzone.scaffold.utils.config.FtpManager;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class ScaffoldCommands {
+public class ScaffoldCommands implements CommandExecutor {
 
-    @CommandPermissions("scaffold.command.lock")
-    @Command(aliases = "lock", desc = "Lock a world at this time.", min = 1, max = 1, usage = "<world>")
-    public static void lock(CommandContext cmd, CommandSender sender) {
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
+        return switch (cmd.getName().toLowerCase()) {
+            case "lock" -> lock(sender, args);
+            case "archive" -> archive(sender, args);
+            case "create" -> create(sender, args);
+            case "open" -> open(sender, args);
+            case "world" -> open(sender, args);
+            case "close" -> close(sender, args);
+            case "export" -> export(sender, args);
+            case "import" -> download(sender, args);
+            case "worlds" -> worlds(sender, args);
+
+            default -> false;
+        };
+    }
+
+    private boolean lock(CommandSender sender, String[] args) {
         if (!sender.hasPermission("scaffold.command.lock")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
-            return;
+            return true;
         }
-        String current = "---";
-        if (sender instanceof Player)
-            current = ((Player) sender).getWorld().getName();
 
-        String worldName = cmd.getString(0, current);
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /lock <world>");
+            return true;
+        }
+
+        String worldName = args[0];
         ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(worldName);
 
         if (!wrapper.isCreated()) {
             sender.sendMessage(ChatColor.RED + "World not found.");
-            return;
+            return true;
         }
 
         if (!wrapper.isOpen()) {
             sender.sendMessage(ChatColor.RED + "World not open.");
-            return;
+            return true;
         }
 
         boolean locked = Scaffold.get().toggleLock(wrapper);
-        if (locked)
-            sender.sendMessage(ChatColor.GOLD + "Locked " + wrapper.getName() + " to current time.");
-        else
-            sender.sendMessage(ChatColor.GOLD + "Unlocked " + wrapper.getName() + ".");
+        sender.sendMessage(ChatColor.GOLD + (locked ? "Locked " + wrapper.getName() + " to current time." : "Unlocked " + wrapper.getName() + "."));
+        return true;
     }
 
-    @CommandPermissions("scaffold.command.archive")
-    @Command(aliases = "archive", desc = "Archive and delete a world (use -k to keep).", min = 1, max = 1, usage = "<world>", flags = "k")
-    public static void archive(CommandContext cmd, CommandSender sender) {
+    private boolean archive(CommandSender sender, String[] args) {
         if (!sender.hasPermission("scaffold.command.archive")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
-            return;
+            return true;
         }
-        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(cmd.getString(0));
+
+        Set<String> flags = getFlags(args);
+        args = removeFlags(args);
+
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /archive <world>");
+            return true;
+        }
+
+        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(args[0]);
+        boolean delete = flags.contains("-k");
 
         if (!wrapper.isCreated()) {
             sender.sendMessage(ChatColor.RED + "World has not been created.");
-            return;
+            return true;
         }
-
-        boolean delete = !cmd.hasFlag('k');
 
         if (wrapper.isOpen() && delete) {
             sender.sendMessage(ChatColor.RED + "World must be closed to archive and delete.");
-            return;
+            return true;
         }
-
-        World world = wrapper.getWorld().get();
-        world.save();
 
         File folder = wrapper.getFolder();
         File archives = new File("scaffold-archives");
         String unique = UUID.randomUUID().toString().substring(0, 6);
         File archive = new File(archives, folder.getName() + "-" + unique);
 
-        if (!archives.exists())
-            archives.mkdir();
+        if (!archives.exists()) archives.mkdir();
 
         try {
             FileUtils.copyDirectory(folder, archive);
-            if (delete) {
-                FileUtils.deleteDirectory(folder);
-                sender.sendMessage(ChatColor.GOLD + "You have deleted and archived \"" + wrapper.getName() + "\".");
-            }
-            else {
-                sender.sendMessage(ChatColor.GOLD + "You have archived \"" + wrapper.getName() + "\".");
-            }
+            if (delete) FileUtils.deleteDirectory(folder);
+            sender.sendMessage(ChatColor.GOLD + (delete ? "Deleted and archived \"" + wrapper.getName() + "\"." : "Archived \"" + wrapper.getName() + "\"."));
         } catch (IOException e) {
             e.printStackTrace();
             sender.sendMessage(ChatColor.RED + "An error has occurred. See the server logs.");
         }
+        return true;
     }
 
-    @CommandPermissions("scaffold.command.create")
-    @Command(aliases = "create", desc = "Create a new world.", min = 1, max = 1, usage = "<world>", flags = "te")
-    public static void create(CommandContext cmd, CommandSender sender) throws CommandNumberFormatException {
+    private boolean create(CommandSender sender, String[] args) {
         if (!sender.hasPermission("scaffold.command.create")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
-            return;
+            return true;
         }
-        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(cmd.getString(0));
 
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /create <world>");
+            return true;
+        }
+
+
+        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(args[0]);
         if (wrapper.isCreated()) {
             sender.sendMessage(ChatColor.RED + "World already created.");
-            return;
+            return true;
         }
-
         if (wrapper.isOpen()) {
             sender.sendMessage(ChatColor.RED + "World already open.");
-            return;
+            return true;
         }
 
-        WorldType type = WorldType.valueOf(cmd.getFlag('t', "FLAT"));
-        Environment env = Environment.valueOf(cmd.getFlag('t', "NORMAL"));
-        long seed = cmd.getFlagInteger('s', ThreadLocalRandom.current().nextInt(500000000));
+        WorldType type = WorldType.FLAT;
+        Environment env = Environment.NORMAL;
+        long seed = ThreadLocalRandom.current().nextInt(500000000);
 
         wrapper.create(type, env, seed);
         sender.sendMessage(ChatColor.GOLD + "Created world \"" + wrapper.getName() + "\".");
+        return true;
     }
 
-    @CommandPermissions("scaffold.command.open")
-    @Command(aliases = "open", desc = "Open a world.", min = 1, max = 1, usage = "<world>")
-    public static void open(CommandContext cmd, CommandSender sender) {
+    private boolean open(CommandSender sender, String[] args) {
         if (!sender.hasPermission("scaffold.command.open")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
-            return;
+            return true;
         }
-        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(cmd.getString(0));
 
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /open <world>");
+            return true;
+        }
+
+        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(args[0]);
         if (!wrapper.isCreated()) {
             sender.sendMessage(ChatColor.RED + "World has not been created.");
-            return;
+            return true;
         }
 
         if (!wrapper.isOpen()) {
@@ -153,192 +171,251 @@ public class ScaffoldCommands {
             sender.sendMessage(ChatColor.GOLD + "Opened world \"" + wrapper.getName() + "\".");
         }
 
-        sender.sendMessage(ChatColor.GOLD + "Teleported to world \"" + wrapper.getName() + "\".");
-
-        if (sender instanceof Player) {
-            Player player = (Player) sender;
-            player.teleport(wrapper.getWorld().get().getSpawnLocation());
-            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-            player.setGameMode(GameMode.CREATIVE);
-            player.setAllowFlight(true);
-            player.setFlying(true);
+        if (sender instanceof Player player) {
+            wrapper.getWorld().ifPresentOrElse(
+                    world -> {
+                        player.teleport(world.getSpawnLocation());
+                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+                        player.setGameMode(GameMode.CREATIVE);
+                        player.setAllowFlight(true);
+                        player.setFlying(true);
+                    },
+                    () -> {
+                        new RuntimeException("An unexpected error has occurred.").printStackTrace();
+                    }
+            );
         }
+        return true;
     }
 
-    @CommandPermissions("scaffold.command.close")
-    @Command(aliases = "close", desc = "Close a world.", min = 1, max = 1, usage = "<world>")
-    public static void close(CommandContext cmd, CommandSender sender) {
-        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(cmd.getString(0));
-
+    private boolean close(CommandSender sender, String[] args) {
         if (!sender.hasPermission("scaffold.command.close")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
-            return;
+            return true;
         }
 
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /close <world>");
+            return true;
+        }
+
+        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(args[0]);
         if (!wrapper.isCreated()) {
             sender.sendMessage(ChatColor.RED + "World has not been created.");
-            return;
+            return true;
         }
 
         if (!wrapper.isOpen()) {
-            sender.sendMessage(ChatColor.RED + "World is not opened.");
-            return;
+            sender.sendMessage(ChatColor.RED + "World is not open.");
+            return true;
         }
 
-        World main = Bukkit.getWorlds().get(0);
-
+        World main = Bukkit.getWorlds().getFirst();
         for (Entity entity : wrapper.getWorld().get().getEntities()) {
-            if (entity instanceof Player) {
-                Player player = (Player) entity;
+            if (entity instanceof Player player) {
                 player.sendMessage(ChatColor.RED + sender.getName() + " is unloading this world... Teleporting elsewhere!");
                 player.teleport(main.getSpawnLocation());
             }
         }
 
         boolean unloaded = wrapper.unload();
-
-        if (unloaded)
-            sender.sendMessage(ChatColor.GOLD + "Closed world \"" + wrapper.getName() + "\".");
-        else
-            sender.sendMessage(ChatColor.GOLD + "Failed to unload world \"" + wrapper.getName() + "\".");
+        sender.sendMessage(ChatColor.GOLD + (unloaded ? "Closed world \"" + wrapper.getName() + "\"." : "Failed to unload world \"" + wrapper.getName() + "\"."));
+        return true;
     }
 
-    @CommandPermissions("scaffold.command.export")
-    @Command(aliases = "export", desc = "Export a world.", min = 0, max = 1, usage = "<world>")
-    public static void upload(CommandContext cmd, CommandSender sender) {
-        if (!sender.hasPermission("scaffold.command.upload")) {
+    private boolean export(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("scaffold.command.export")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
-            return;
+            return true;
         }
 
-        String current = "---";
-        if (sender instanceof Player)
-            current = ((Player) sender).getWorld().getName();
+        Set<String> flags = getFlags(args);
+        args = removeFlags(args);
 
-        String worldName = cmd.getString(0, current);
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /export <world>");
+            return true;
+        }
+
+        String worldName = args[0];
         ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(worldName);
+        //TODO: Implement chunk pruning (this flag is currently unusued)
+        boolean prune = flags.contains("-p");
 
         if (!wrapper.isCreated()) {
             sender.sendMessage(ChatColor.RED + "World not found.");
-            return;
+            return true;
+        }
+
+        FtpManager ftpManager = new FtpManager();
+        String username = ftpManager.getProperty("fileio_username");
+        String password = ftpManager.getProperty("fileio_password");
+
+        if (username == null || password == null) {
+            sender.sendMessage(ChatColor.RED + "API credentials are not set correctly.");
+            return true;
         }
 
         Scaffold.get().async(() -> {
             sender.sendMessage(ChatColor.YELLOW + "Compressing world...");
             String randy = UUID.randomUUID().toString().substring(0, 3);
-            File zip = new File(wrapper.getName()  + "-" + randy + ".zip");
+            File zip = new File(wrapper.getName() + "-" + randy + ".zip");
 
             try {
-                Zip.create(wrapper.getFolder(), zip);
+                Zip.create(wrapper.getFolder(), zip, prune);
+
+                sender.sendMessage(ChatColor.YELLOW + "Uploading world, this may take a while depending on the map size...");
+                HttpResponse<String> response = Unirest.post("https://file.io")
+                        .basicAuth(username, password)
+                        .field("file", zip)
+                        .asString();
+
+                if (response.getStatus() == 200) {
+                    JSONObject responseJson = new JSONObject(response.getBody());
+                    String link = responseJson.getString("link");
+                    sender.sendMessage(ChatColor.GREEN + "Upload complete: " + link);
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Failed to upload world: " + response.getStatusText());
+                }
+                try {
+                    if (!zip.delete()) {
+                        System.err.println("Failed to delete the zip file: " + zip.getAbsolutePath());
+                    }
+                } catch (SecurityException e) {
+                    System.err.println("SecurityException: Unable to delete the zip file (insufficient permissions?)");
+                    e.printStackTrace();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
-                sender.sendMessage(ChatColor.RED + "Failed to compress.");
-                return;
+                sender.sendMessage(ChatColor.RED + "Failed to compress or upload the specified world.");
             }
-
-            sender.sendMessage(ChatColor.YELLOW + "Uploading world...");
-            try {
-                HttpResponse<String> response = Unirest.post("https://transfer.sh/").header("Max-Downloads", "1").header("Max-Days", "3").field("upload-file", zip).asString();
-                String link = response.getBody();
-                zip.delete();
-                sender.sendMessage(ChatColor.GOLD + "Upload complete: " + link);
-            } catch (Exception e) {
-                e.printStackTrace();
-                sender.sendMessage(ChatColor.RED + "Failed to upload, see the server logs.");
-            }
-
         });
+        return true;
     }
 
-    @CommandPermissions("scaffold.command.import")
-    @Command(aliases = "import", desc = "Import a world.", min = 2, max = 2, usage = "<.zip file link> <world name>")
-    public static void download(CommandContext cmd, CommandSender sender) {
+    private boolean download(CommandSender sender, String[] args) {
         if (!sender.hasPermission("scaffold.command.import")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
-            return;
+            return true;
         }
 
-        String link = cmd.getString(0);
-        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(cmd.getString(1));
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /import <.zip file link> <world name>");
+            return true;
+        }
+
+        String link = args[0];
+        ScaffoldWorld wrapper = ScaffoldWorld.ofSearch(args[1]);
 
         if (wrapper.isCreated()) {
             sender.sendMessage(ChatColor.RED + "World already created.");
-            return;
+            return true;
         }
 
-        Bukkit.broadcastMessage(ChatColor.YELLOW + "World import by " + sender.getName() + " beginning...");
+        sender.sendMessage(ChatColor.YELLOW + "Importing world...");
+        try {
+            HttpResponse<InputStream> response = Unirest.get(link)
+                    .header("content-type", "*/*")
+                    .asBinary();
 
-        Scaffold.get().async(() -> {
-            try {
-                HttpResponse<InputStream> response = Unirest.get(link).header("content-type", "*/*").asBinary();
-                File temp = new File(UUID.randomUUID().toString() + ".zip");
-                Files.copy(response.getBody(), temp.toPath());
-                Zip.extract(temp, wrapper.getFolder());
-                FileUtils.forceDelete(temp);
-                if (!wrapper.isCreated()) {
-                    sender.sendMessage(ChatColor.RED + "Invalid zipped world, no level.dat in root?");
-                    FileUtils.deleteDirectory(wrapper.getFolder());
-                    return;
-                }
-                Scaffold.get().sync(() -> {
-                    wrapper.load();
-                    sender.sendMessage(ChatColor.GOLD + "World imported and opened!");
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                sender.sendMessage(ChatColor.RED + e.getMessage());
-                sender.sendMessage(ChatColor.RED + "Failed to import, see server logs.");
+            File tempZip = new File(UUID.randomUUID() + ".zip");
+            Files.copy(response.getBody(), tempZip.toPath());
+            Zip.extract(tempZip, wrapper.getFolder());
+            FileUtils.forceDelete(tempZip);
+
+            if (!wrapper.isCreated()) {
+                sender.sendMessage(ChatColor.RED + "Invalid zipped world, no level.dat in root?");
+                FileUtils.deleteDirectory(wrapper.getFolder());
+                return true;
             }
-        });
+
+            wrapper.load();
+            sender.sendMessage(ChatColor.GOLD + "World imported and opened!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            sender.sendMessage(ChatColor.RED + "Failed to import, see server logs.");
+        }
+        return true;
     }
 
-    @CommandPermissions("scaffold.command.worlds")
-    @Command(aliases = "worlds", desc = "Show all worlds.", min = 0, max = 1, flags = "l", help = "(search)")
-    public static void worlds(CommandContext cmd, CommandSender sender) {
+    private boolean worlds(CommandSender sender, String[] args) {
         if (!sender.hasPermission("scaffold.command.worlds")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission.");
-            return;
+            return true;
         }
-        List<ScaffoldWorld> all = new ArrayList<>();
 
-        File scaffold = new File("scaffold");
-        if (scaffold.exists()) {
-            File[] contents = scaffold.listFiles();
+        Set<String> flags = getFlags(args);
+        args = removeFlags(args);
+
+        List<ScaffoldWorld> allWorlds = new ArrayList<>();
+        File scaffoldFolder = new File("scaffold");
+
+        if (scaffoldFolder.exists()) {
+            File[] contents = scaffoldFolder.listFiles();
             if (contents != null) {
                 for (File folder : contents) {
                     ScaffoldWorld world = new ScaffoldWorld(folder.getName());
-                    if (world.isCreated())
-                        all.add(world);
+                    if (world.isCreated()) {
+                        allWorlds.add(world);
+                    }
                 }
             }
         }
 
-        all.sort(Comparator.comparing(ScaffoldWorld::getName));
-
+        allWorlds.sort(Comparator.comparing(ScaffoldWorld::getName));
         String prefix = "Worlds";
 
-        if (cmd.hasFlag('o')) {
-            all.removeIf(wrapper -> !wrapper.isOpen());
+        if (flags.contains("-o")) {
+            allWorlds.removeIf(world -> !world.isOpen());
             prefix = "Opened worlds";
         }
+        else if (flags.contains("-c")) {
+            allWorlds.removeIf(ScaffoldWorld::isOpen);
+            prefix = "Closed worlds";
+        }
 
-        if (cmd.argsLength() == 1) {
-            String query = cmd.getString(0).toLowerCase();
-            all.removeIf(world -> !world.getName().toLowerCase().contains(query));
-            prefix += " (matching \"" + cmd.getString(0) + "\")";
+        if (args.length > 0) {
+            //TODO: I am like 95% sure we don't want world names to have spaces in them, so this is redundant.
+            // Instead, perhaps change it to search for like worlds with "string1" or "string2" or "string3" etc.
+            String query = String.join(" ", args).toLowerCase();
+
+            allWorlds.removeIf(world -> !world.getName().toLowerCase().contains(query));
+            prefix += " (matching \"" + query + "\")";
         }
 
         List<String> names = new ArrayList<>();
-
-        for (ScaffoldWorld wrapper : all) {
-            if (wrapper.isOpen())
-                names.add(ChatColor.GREEN + wrapper.getName());
-            else
-                names.add(ChatColor.RED + wrapper.getName());
+        for (ScaffoldWorld wrapper : allWorlds) {
+            names.add((wrapper.isOpen() ? ChatColor.GREEN : ChatColor.RED) + wrapper.getName());
         }
-
 
         String list = Joiner.on(ChatColor.WHITE + ", ").join(names);
         sender.sendMessage(ChatColor.GRAY + prefix + ": " + list);
+        return true;
+    }
+
+    private Set<String> getFlags(String[] args) {
+        Set<String> flags = new HashSet<>();
+
+        for (String arg : args) {
+            if (arg.startsWith("-")) {
+                // Handle combined flags (ex: "-ktf" becomes "-k", "-t", "-f")
+                // Also limit max combined flag to 10 (software security!)
+                for (int i = 1; i < arg.length() || i == 10; i++) {
+                    flags.add("-" + arg.charAt(i));
+                }
+            }
+        }
+        return flags;
+    }
+
+    private String[] removeFlags(String[] args) {
+        List<String> filteredArgs = new ArrayList<>();
+
+        for (String arg : args) {
+            if (!arg.startsWith("-")) {
+                filteredArgs.add(arg);
+            }
+        }
+        return filteredArgs.toArray(new String[0]);
     }
 }

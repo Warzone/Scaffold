@@ -1,16 +1,13 @@
 package network.warzone.scaffold;
 
 import com.google.common.base.Preconditions;
-import com.sk89q.bukkit.util.CommandsManagerRegistration;
-import com.sk89q.minecraft.util.commands.*;
 import network.warzone.scaffold.commands.ScaffoldCommands;
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,54 +19,31 @@ public final class Scaffold extends JavaPlugin implements TabCompleter {
         return instance;
     }
 
-    private CommandsManager<CommandSender> commands;
     private Map<ScaffoldWorld, Long> locked = new HashMap<>();
 
     @Override
     public void onEnable() {
         instance = this;
+        setupConfig();
 
-        this.commands = new CommandsManager<CommandSender>() {
-            @Override
-            public boolean hasPermission(CommandSender sender, String perm) {
-                return sender instanceof ConsoleCommandSender || sender.hasPermission(perm);
-            }
-        };
+        ScaffoldCommands commandExecutor = new ScaffoldCommands();
+        getCommand("lock").setExecutor(commandExecutor);
+        getCommand("archive").setExecutor(commandExecutor);
+        getCommand("create").setExecutor(commandExecutor);
+        getCommand("open").setExecutor(commandExecutor);
+        getCommand("close").setExecutor(commandExecutor);
+        getCommand("export").setExecutor(commandExecutor);
+        getCommand("import").setExecutor(commandExecutor);
+        getCommand("worlds").setExecutor(commandExecutor);
 
-        CommandsManagerRegistration cmds = new CommandsManagerRegistration(this, this.commands);
-        cmds.register(ScaffoldCommands.class);
-
+        // Schedule repeating task to load locked world data
         getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
             for (ScaffoldWorld wrapper : locked.keySet()) {
-                if (wrapper.isOpen())
+                if (wrapper.isOpen()) {
                     wrapper.getWorld().get().setFullTime(locked.get(wrapper));
+                }
             }
-        }, 1, 20);
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-        try {
-            this.commands.execute(cmd.getName(), args, sender, sender);
-        } catch (CommandPermissionsException e) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission.");
-        } catch (MissingNestedCommandException e) {
-            sender.sendMessage(ChatColor.RED + e.getUsage());
-        } catch (CommandUsageException e) {
-            sender.sendMessage(ChatColor.RED + e.getMessage());
-            sender.sendMessage(ChatColor.RED + e.getUsage());
-        } catch (WrappedCommandException e) {
-            if (e.getCause() instanceof NumberFormatException) {
-                sender.sendMessage(ChatColor.RED + "Number expected, string received instead.");
-            } else {
-                sender.sendMessage(ChatColor.RED + "An error has occurred. See console.");
-                e.printStackTrace();
-            }
-        } catch (CommandException e) {
-            sender.sendMessage(ChatColor.RED + e.getMessage());
-        }
-
-        return true;
+        }, 1L, 20L);
     }
 
     public void sync(Runnable runnable) {
@@ -92,5 +66,30 @@ public final class Scaffold extends JavaPlugin implements TabCompleter {
         }
         locked.put(wrapper, wrapper.getWorld().get().getFullTime());
         return true;
+    }
+
+    public void setupConfig() {
+        try {
+            String path = "plugins/Scaffold/config.properties";
+            File configFile = new File(path);
+
+            if (!configFile.exists()) {
+                configFile.getParentFile().mkdirs();
+                configFile.createNewFile();
+
+                // Write default properties to the file
+                try (FileWriter writer = new FileWriter(configFile)) {
+                    writer.write("fileio_username=defaultUsername\n");
+                    writer.write("fileio_password=defaultPassword\n");
+                } catch (IOException e) {
+                    System.out.println("An error occurred while writing to the config file.");
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Could not create the config.properties file.");
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 }
