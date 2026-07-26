@@ -1,8 +1,6 @@
 package network.warzone.scaffold;
 
 import com.google.common.base.Preconditions;
-import lombok.Data;
-import lombok.ToString;
 import network.warzone.scaffold.utils.config.Config;
 import network.warzone.scaffold.utils.config.ConfigFile;
 import org.apache.commons.io.FileUtils;
@@ -11,21 +9,38 @@ import org.bukkit.World.Environment;
 import org.bukkit.util.Vector;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.Optional;
 
-@ToString(exclude = {"folder", "configFile"}) @Data
 public class ScaffoldWorld {
 
     private final String name;
     private final String worldName;
     private final File folder;
     private final File configFile;
+    private int taskID = -1;
 
     public ScaffoldWorld(String name) {
         this.name = name;
         this.worldName = "scaffold/" + this.name;
         this.folder = new File(this.worldName);
         this.configFile = new File(this.folder, "scaffold.yml");
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getWorldName() {
+        return worldName;
+    }
+
+    public File getFolder() {
+        return folder;
+    }
+
+    public File getConfigFile() {
+        return configFile;
     }
 
     public Optional<World> getWorld() {
@@ -73,6 +88,10 @@ public class ScaffoldWorld {
         world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
         world.setGameRule(GameRule.LOG_ADMIN_COMMANDS, false);
         world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0);
+        world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+        world.setGameRule(GameRule.DO_FIRE_TICK, false);
+        world.setGameRule(GameRule.MOB_GRIEFING, false);
+
 
         Vector min = new Vector(-1, 0, -1);
         Vector max = new Vector(1, 0, 1);
@@ -95,6 +114,7 @@ public class ScaffoldWorld {
         WorldCreator creator = worldCreator(config);
         World world = creator.createWorld();
         world.setAutoSave(true);
+        startAutoSaveTask();
         return world;
     }
 
@@ -103,6 +123,7 @@ public class ScaffoldWorld {
             FileUtils.forceDelete(new File(this.folder, "uid.dat"));
         } catch (Exception e) {
             // meh...
+            // ??? tf u mean "meh" luuke???
         }
     }
 
@@ -112,6 +133,7 @@ public class ScaffoldWorld {
 
         World world = getWorld().get();
         world.save();
+        cancelAutoSaveTask();
         return Bukkit.unloadWorld(world, true);
     }
 
@@ -149,4 +171,47 @@ public class ScaffoldWorld {
         return new ScaffoldWorld(query);
     }
 
+    @Override
+    public String toString() {
+        return "ScaffoldWorld{" +
+                "name='" + name + '\'' +
+                ", worldName='" + worldName + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ScaffoldWorld)) return false;
+        ScaffoldWorld that = (ScaffoldWorld) o;
+        return name.equals(that.name) && worldName.equals(that.worldName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, worldName);
+    }
+
+    // Schedule an async repeating task every 5 minutes (5 * 60 * 20 ticks)
+    private void startAutoSaveTask() {
+        this.taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(
+                Scaffold.get(),
+                () -> Scaffold.get().async(() -> {
+                    Optional<World> optionalWorld = getWorld();
+                    optionalWorld.ifPresent(world -> Scaffold.get().sync(() -> {
+                        world.save();
+                        Bukkit.getLogger().info("Auto-saved world: " + world.getName());
+                    }));
+                }),
+                0L,
+                5 * 60 * 20L
+        );
+    }
+
+    private void cancelAutoSaveTask() {
+        if (taskID != -1) {
+            Bukkit.getScheduler().cancelTask(taskID);
+            taskID = -1;
+        }
+    }
 }
